@@ -3,40 +3,29 @@ import { LocalizationProvider, TimeField} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import './form.css';
 import {Button, FormControl, InputLabel, MenuItem, Select, TextField} from "@mui/material";
-import * as z from 'zod';
 import {zodResolver} from "@hookform/resolvers/zod";
+import {formSchema, pizzaSchema, sandwichSchema, soupSchema} from "./schema";
+import { motion} from 'framer-motion'
 
-const foodTypes = ['pizza', 'soup', 'sandwich'] as const
 
-const formSchema = z.object({
-    name: z.string().min(1, { message: 'Food name is required' }),
-    preparation_time: z.string().regex(new RegExp('^(?:(?:([01]?\\d|2[0-3]):)?([0-5]?\\d):)?([0-5]?\\d)$'), {message:'Preparation time is required'}),
-    type:z.enum(foodTypes, {required_error: 'Type of food is required'}),
-    spiciness_scale:z.number().min(1).max(10),
-})
 
-const pizzaSchema = formSchema.extend({
-    no_of_slices:z.number().min(1, {message:'There should be atleast one slice'}),
-    diameter:z.number()
-});
-const soupSchema = formSchema.extend({
-    spiciness_scale:z.number().min(1).max(10),
-});
-const sandwichSchema = formSchema.extend({
-    slices_of_bread:z.number().min(1)
-})
+
 export interface FormValues  {
     preparation_time:string,
     name:string,
     type: 'pizza' | 'sandwich' | 'soup',
-    spiciness_scale:number
+    spiciness_scale?:number,
+    slices_of_bread?:number,
+    no_of_slices?:number,
+    diameter?:number
 }
 export const Form = () => {
-    const {register, handleSubmit, formState : {errors}, control, reset, watch} =  useForm<FormValues>({
+    const {register, handleSubmit, formState : {errors}, control, watch, getValues} =  useForm<FormValues>({
         resolver: zodResolver(formSchema),
+
     });
-    console.log(errors)
     const submitForm:SubmitHandler<FormValues> = async (data) => {
+        console.log(data)
         let schema;
         switch(data.type){
             case 'pizza':
@@ -50,7 +39,16 @@ export const Form = () => {
 
         }
         try{
-            await schema.parseAsync(data)
+            await schema.safeParseAsync(data);
+            const res = await fetch('https://umzzcc503l.execute-api.us-west-2.amazonaws.com/dishes/', {
+                method:"POST",
+                body:JSON.stringify(data),
+                headers:{
+                    'content-type':'application/json'
+                }
+            });
+            const data2 = await res.json();
+            console.log(data2)
         }catch(err){
             console.log(err)
         }
@@ -65,13 +63,6 @@ export const Form = () => {
                     <p className='error-text'>{errors.name?.message}</p>
                 </div>
                <div> <LocalizationProvider dateAdapter={AdapterDayjs}>
-                   {/*<TimeField*/}
-                   {/*    label="Preparation time"*/}
-                   {/*    name='preparation_time'*/}
-                   {/*    format="HH:mm:ss"*/}
-                   {/*    value={value}*/}
-                   {/*    onChange={(newValue) => setValue(newValue)}*/}
-                   {/*/>*/}
                    <Controller
                        control={control}
                        name="preparation_time"
@@ -80,11 +71,10 @@ export const Form = () => {
                        }}
                        render={({ field: { ref, onBlur, name, ...field } }) => (
                            <TimeField
-
                                format="HH:mm:ss"
                                label="Preparation Time"
                                {...register('preparation_time')}
-                               defaultValue={null}
+
                            />
                        )}
                    />
@@ -102,17 +92,54 @@ export const Form = () => {
                         <MenuItem value={'sandwich'}>Sandwich</MenuItem>
                     </Select>
                 </FormControl>
-                {(watch('type')) === 'soup' ? <div>
-                    <TextField
-                        fullWidth
-                        label="Times"
-                        type="number"
-                        {...register('spiciness_scale', {
-                            valueAsNumber:true
-                        })}
-                    />
-                    <p className='error-text'>{errors.spiciness_scale?.message}</p>
-                </div>: null}
+
+                   {(watch('type')) === 'soup' && <motion.div initial={{opacity:1, x:300}} animate={{opacity:1, x:0}} >
+                       <TextField
+                           fullWidth
+                           label="Spiciness scale(1-10)"
+                           defaultValue={0}
+                           type="number"
+                           {...register('spiciness_scale', {
+                               valueAsNumber:true
+                           })}
+                       />
+                       <p className='error-text'>{errors.spiciness_scale?.message}</p>
+                   </motion.div>} {watch('type') === 'sandwich' && <motion.div initial={{opacity:1, x:300}} animate={{opacity:1, x:0}} >
+                       <TextField
+                           fullWidth
+                           defaultValue={1}
+                           label="Amount of a bread slices"
+                           InputProps={{ inputProps: { min: 1} }}
+                           type="number"
+                           {...register('slices_of_bread', {
+                               valueAsNumber:true
+                           })}
+                       />
+                       <p className='error-text'>{errors.slices_of_bread?.message}</p>
+                   </motion.div>} {watch('type') === 'pizza' &&<> <motion.div initial={{opacity:1, x:300}} animate={{opacity:1, x:0}} >
+                       <TextField
+                           fullWidth
+                           label="Amount of pizza slices"
+                           InputProps={{ inputProps: { min: 0} }}
+                           type="number"
+                           {...register('no_of_slices', {
+                               valueAsNumber:true
+                           })}
+                       />
+                       <p className='error-text'>{errors.no_of_slices?.message}</p>
+                   </motion.div>
+                       <motion.div initial={{opacity:1, x:300}} animate={{opacity:1, x:0}} exit={{x:-300, opacity:1}}>
+                           <TextField
+                               fullWidth
+                               label="Pizza diameter"
+                               InputProps={{ inputProps: { min: 0} }}
+                               type="number"
+                               {...register('diameter', {
+                                   valueAsNumber:true
+                               })}
+                           />
+                           <p className='error-text'>{errors.diameter?.message}</p>
+                       </motion.div></> }
                 <Button type={"submit"}>Submit</Button>
             </form>
         </div></>)
