@@ -1,13 +1,14 @@
 import * as z from "zod";
 export const foodTypes = ['pizza', 'soup', 'sandwich'] as const
+
 export const formSchema = z.object({
     name: z.string().min(1, { message: 'Food name is required' }).min(3, {message:'At least 3 characters'}),
     preparation_time: z.string().regex(new RegExp('^([0-1]?\\d|2[0-3])(?::([0-5]?\\d))?(?::([0-5]?\\d))?$'), {message:'Preparation time is required'}),
-    type:z.enum(foodTypes, {required_error: 'Type of food is required'}),
-    spiciness_scale:z.number({invalid_type_error:'Spiciness should be of type number'}).min(1).max(10).optional(),
-    slices_of_bread:z.number().min(1).optional(),
-    no_of_slices:z.number().min(0).optional(),
-    diameter:z.number().min(0).optional()
+    type:z.enum(foodTypes, {required_error: 'Type of food is required', invalid_type_error:'Type of food is required'}),
+    spiciness_scale:z.number({invalid_type_error:'Spiciness is required'}).min(1).max(10, {message:'Cannot be higher than 10'}).optional(),
+    slices_of_bread:z.number({invalid_type_error:'Amount of bread slices is required'}).min(1).optional(),
+    no_of_slices:z.number({invalid_type_error:'Amount of slices is required'}).min(0).optional(),
+    diameter:z.number({invalid_type_error:'Diameter is required'}).min(0).optional()
 })
 
 export const pizzaSchema = formSchema.extend({

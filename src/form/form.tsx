@@ -6,6 +6,8 @@ import {Button, FormControl, InputLabel, MenuItem, Select, TextField} from "@mui
 import {zodResolver} from "@hookform/resolvers/zod";
 import {formSchema, pizzaSchema, sandwichSchema, soupSchema} from "./schema";
 import { motion} from 'framer-motion'
+import {useEffect} from "react";
+import {toast, ToastContainer} from "react-toastify";
 
 
 
@@ -20,13 +22,20 @@ export interface FormValues  {
     diameter?:number
 }
 export const Form = () => {
-    const {register, handleSubmit, formState : {errors}, control, watch, getValues} =  useForm<FormValues>({
+    const {register, handleSubmit, formState : {errors}, control, watch, resetField} =  useForm<FormValues>({
         resolver: zodResolver(formSchema),
 
     });
+    useEffect(() => {
+        // Reset those fields when type of food is changed
+        resetField('spiciness_scale');
+        resetField('no_of_slices');
+        resetField('diameter');
+        resetField('slices_of_bread');
+    }, [watch('type')])
     const submitForm:SubmitHandler<FormValues> = async (data) => {
-        console.log(data)
         let schema;
+        // handle validation of different schemas
         switch(data.type){
             case 'pizza':
                 schema = pizzaSchema;
@@ -48,12 +57,18 @@ export const Form = () => {
                 }
             });
             const data2 = await res.json();
-            console.log(data2)
+            toast.success(`Dish ${data2.name} created`, {
+                position: "top-center",
+                theme:"dark",
+
+
+            });
         }catch(err){
             console.log(err)
         }
     }
     return (<>
+        <ToastContainer/>
         <div className='form-container'>
             <form onSubmit={handleSubmit(submitForm)} autoComplete={'off'}>
                 <div className="input-container">
@@ -82,15 +97,16 @@ export const Form = () => {
                </LocalizationProvider></div>
                 <FormControl fullWidth>
                     <InputLabel id="demo-simple-select-label">Type</InputLabel>
-                    <Select
+                    <Select required
                         {...register('type')}
                         label="Type"
                         defaultValue={""}
                     >
-                        <MenuItem value={'pizza'}>Pizza</MenuItem>
-                        <MenuItem value={'soup'}>Soup</MenuItem>
-                        <MenuItem value={'sandwich'}>Sandwich</MenuItem>
+                        <MenuItem value={'pizza'}>🍕 Pizza</MenuItem>
+                        <MenuItem value={'soup'}>🥣 Soup</MenuItem>
+                        <MenuItem value={'sandwich'}>🥪 Sandwich</MenuItem>
                     </Select>
+                    <p className='error-text'>{errors.type?.type}</p>
                 </FormControl>
 
                    {(watch('type')) === 'soup' && <motion.div initial={{opacity:1, x:300}} animate={{opacity:1, x:0}} >
