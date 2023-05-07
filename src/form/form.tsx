@@ -70,7 +70,7 @@ export const Form = () => {
     return (<>
         <ToastContainer/>
         <div className='form-container'>
-            <form onSubmit={handleSubmit(submitForm)} autoComplete={'off'}>
+            <motion.form initial={{y:-300}} transition={{ ease:"easeInOut"}}  animate={{y:0}} onSubmit={handleSubmit(submitForm)} autoComplete={'off'}>
                 <div className="input-container">
                     <TextField label={'Pick a name'} variant={'outlined'} type="text" {
                         ...register('name')
@@ -157,6 +157,6 @@ export const Form = () => {
                            <p className='error-text'>{errors.diameter?.message}</p>
                        </motion.div></> }
                 <Button type={"submit"}>Submit</Button>
-            </form>
+            </motion.form>
         </div></>)
 }
