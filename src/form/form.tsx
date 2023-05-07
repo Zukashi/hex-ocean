@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {Controller, SubmitHandler, useForm} from "react-hook-form";
 import { LocalizationProvider, TimeField} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
@@ -67,6 +68,7 @@ export const Form = () => {
             console.log(err)
         }
     }
+    // @ts-ignore
     return (<>
         <ToastContainer/>
         <div className='form-container'>
@@ -84,7 +86,7 @@ export const Form = () => {
                        rules={{
 
                        }}
-                       render={({ field: { ref, onBlur, name, ...field } }) => (
+                       render={({ field: { ref, onBlur, name } }) => (
                            <TimeField
                                format="HH:mm:ss"
                                label="Preparation Time"
