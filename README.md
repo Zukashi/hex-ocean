@@ -18,7 +18,7 @@
    ```sh
    npm install
    ```
-4.Run the script
+4. Run the script
    ```sh
    npm run dev
    ```
